@@ -29,6 +29,14 @@
    - Test strategy is not a suggestion
    - Mocking policy is enforced
 
+6. **Sole Status Ownership**
+   - You MUST NOT PATCH the status of a parent issue.
+   - Your `Exit` phase always PATCHes your OWN assigned issue to `in_review`.
+   - CEO handles all hierarchical transitions.
+
+7. **Mandatory Branch Creation**
+   - You MUST specify branch creation as the FIRST implementation task in all contracts.
+
 ## Soft Rules (escalate if violated)
 
 1. **Architecture exceptions require CEO approval**
@@ -51,11 +59,13 @@
 ### CEO Escalation (Blocking Escalation)
 
 Use when:
+
 - Unbreakable architecture rule would be violated
 - Feature is impossible given constraints
 - Specification is fundamentally flawed
 
 Action:
+
 - Mark issue locked
 - Comment with escalation reason
 - @mention CEO in comment
@@ -63,11 +73,13 @@ Action:
 ### Product Spec Agent Escalation
 
 Use when:
+
 - Specification is incomplete
 - Business rule is unclear
 - Acceptance criteria are not testable
 
 Action:
+
 - Comment on spec issue with request
 - Ask for clarification
 - Do not proceed until spec is clarified
@@ -75,11 +87,13 @@ Action:
 ### Implementation Agent Escalation
 
 Use when:
+
 - Implementation deviates from contract
 - Coverage falls below threshold
 - Test execution order is wrong
 
 Action:
+
 - Flag in implementation review
 - Request corrective action
 - Do not approve until contract is followed
@@ -98,6 +112,7 @@ Every significant decision must be documented:
 ## Performance Metrics
 
 Track:
+
 - Time to produce architecture report (target: same heartbeat as spec receipt)
 - Violations caught before implementation (target: 100%)
 - Coverage thresholds maintained (target: 100% of implementations meet threshold)

@@ -1,6 +1,8 @@
-# Test Verification Agent — Heartbeat Execution Loop
+# Test Verification Agent — Heartbeat Execution Loop (PASSIVE)
 
 ## Execution Model
+
+The Test Verification Agent operates on a PASSIVE heartbeat cycle. You ONLY execute when explicitly triggered by a Paperclip assignment or wake event. You do NOT poll for work.
 
 **Wake Trigger**: issue_commented, manual activation  
 **Mode**: Audit-only (no execution, no redesign, no redefinition)  
@@ -9,12 +11,14 @@
 ## Execution Checklist (Per Heartbeat)
 
 ### 1. Context Ingestion
+
 - [ ] Issue context loaded (objective, acceptance criteria)
 - [ ] Input artifacts available (diff, contract, test results, coverage)
 - [ ] Previous audit state retrieved (if any)
 - [ ] Memory state restored (para-memory-files)
 
 ### 2. Audit Execution (Ordered)
+
 - [ ] **Contract Validation**: Compare test_contract.md vs. actual test coverage
 - [ ] **Cosmetic Detection**: Identify tests with no behavioral assertions
 - [ ] **Redundancy Detection**: Identify duplicated test cases
@@ -23,6 +27,7 @@
 - [ ] **Critical Path Assertions**: Verify happy path, error flows, edge cases covered
 
 ### 3. Artifact Generation
+
 - [ ] test_audit_report.md created with sections:
   - Summary (pass/fail/warnings)
   - Findings (organized by category + severity)
@@ -30,11 +35,19 @@
   - Evidence (links to test files, line numbers, code snippets)
 
 ### 4. Escalation & Handoff
+
 - [ ] Report routed to Implementation Agent (parent)
 - [ ] Blockers documented (if any)
-- [ ] Next action specified (remediation or acceptance)
+- [ ] Delegation: If audit passes, create child issue for Semantic Verification Agent:
+  - `POST /api/companies/{companyId}/issues`
+  - Include `parentId`, `goalId`, `assigneeAgentId: "semantic-verification-agent"`
+  - **REQUIRED**: Set `projectId: {same-as-parent}`.
+- [ ] Exit:
+  - PATCH own issue status to `in_review`
+  - Leave comment for `@Board` with audit summary.
 
 ### 5. Memory Update
+
 - [ ] Audit facts stored (para-memory-files)
 - [ ] Daily notes updated (audit timestamp, findings summary)
 - [ ] State persisted (ready for next cycle)

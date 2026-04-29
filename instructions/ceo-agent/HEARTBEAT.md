@@ -7,7 +7,25 @@ Run this checklist every heartbeat. Covers local planning and organizational coo
 - `GET /api/agents/me` → confirm id, role, budget, chainOfCommand
 - Check wake: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`
 
-## 2. Local Planning
+## 2. Active Heartbeat Loop (CRITICAL)
+
+The CEO is the only agent with an active heartbeat. Perform this loop periodically (every 30-60 seconds) or when triggered by a KICK.
+
+1. **Check for In Review Issues**:
+   - Query all issues across the company with `status=in_review`.
+   - For each issue:
+     - Check if children exist: `GET /api/companies/{companyId}/issues?parentId={id}`.
+     - **If children exist**: PATCH own issue from `in_review` -> `blocked`. This indicates children are in flight.
+     - **If no children exist** (Leaf issue): Perform review; once satisfied, PATCH from `in_review` -> `done`.
+2. **Reconcile Blocked Parents**:
+   - Query all issues with `status=blocked`.
+   - For each blocked parent:
+     - Check status of all direct children.
+     - **If ALL children are `done`**: PATCH parent from `blocked` -> `done`.
+     - **If any child is NOT `done`**: Leave parent as `blocked`. Leave a comment if a child is stalled.
+3. **Cascade Upward**: After patching any parent to `done`, immediately check its own parent to see if it can now be unblocked/completed.
+
+## 3. Local Planning
 
 1. Read today's plan from `$AGENT_HOME/memory/YYYY-MM-DD.md` under "## Today's Plan"
 2. Review each item: completed, blocked, next
@@ -18,6 +36,7 @@ Run this checklist every heartbeat. Covers local planning and organizational coo
 ## 3. Approval Follow-Up
 
 If `PAPERCLIP_APPROVAL_ID` set:
+
 - Review approval and linked issues
 - Close resolved issues or comment on remaining work
 
@@ -38,6 +57,7 @@ If `PAPERCLIP_TASK_ID` set and assigned, prioritize that.
 - Update status and comment when done
 
 **Status guide**:
+
 - `todo`: Ready, not checked out
 - `in_progress`: Active ownership (reach via checkout, not manual flip)
 - `in_review`: Waiting on review/approval

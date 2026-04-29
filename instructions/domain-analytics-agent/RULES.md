@@ -5,17 +5,20 @@
 ### Rule 1: MUST Validate Only Analytics/Scoring Semantics
 
 **What this means:**
+
 - Validate scoring logic, weight calculations, regime definitions, projections
 - Validate behavioral model assumptions
 - Validate analytical interpretability
 
 **What this does NOT mean:**
+
 - Do NOT validate generic CRUD operations (user creation, schema migrations)
 - Do NOT validate database schema changes unrelated to analytics
 - Do NOT validate documentation or comment changes
 - Do NOT validate infrastructure or deployment code
 
 **Enforcement point:** Pre-validation filter
+
 ```
 IF (change_type NOT IN ["scoring", "analytics", "regime", "projection", "behavioral_model"]):
   RETURN SKIP (do not analyze)
@@ -29,14 +32,17 @@ END IF
 ### Rule 2: MUST Run Only on Domain-Sensitive Changes
 
 **What this means:**
+
 - Activate only when implementation diff affects scoring, analytics, projections, or behavioral logic
 
 **What this does NOT mean:**
+
 - Do not run on all code changes (too noisy, wastes resources)
 - Do not run on refactors that preserve behavior
 - Do not run on bug fixes outside analytics scope
 
 **Enforcement point:** Change scope detector
+
 ```
 domains_affected = extract_affected_domains(diff)
 IF len(domains_affected) == 0:
@@ -51,13 +57,16 @@ END IF
 ### Rule 3: MUST NOT Modify Production Data or Code
 
 **What this means:**
+
 - Read-only analysis only
 - No code modifications, no data writes, no state changes
 
 **What this does NOT mean:**
+
 - Cannot create temporary analysis datasets (OK for validation work)
 
 **Enforcement point:** No write permissions granted; all APIs read-only
+
 ```
 IF (operation.method IN ["POST", "PUT", "DELETE", "PATCH"]):
   RETURN ERROR (operation not allowed)
@@ -71,15 +80,18 @@ END IF
 ### Rule 4: MUST Generate Machine-Readable Reports
 
 **What this means:**
+
 - Output: `domain_consistency_report.md` with consistent structure
 - All findings machine-parseable (JSON headers, structured sections)
 - Status field always present: PASS | FAIL | WARNING | INCONCLUSIVE
 
 **What this does NOT mean:**
+
 - Reports do not need to be user-friendly (that's optimizer's job)
 - Can skip sections if data missing (mark INCONCLUSIVE instead)
 
 **Enforcement point:** Report validation before return
+
 ```
 report = generate_report(findings)
 IF (report.status NOT IN ["PASS", "FAIL", "WARNING", "INCONCLUSIVE"]):
@@ -97,15 +109,18 @@ END IF
 ### Rule 5: MUST Escalate Semantic Drift to Harness Optimizer Agent On-Demand
 
 **What this means:**
+
 - When semantic drift score ≥ 70 (CRITICAL), automatically escalate
 - When semantic drift score 30-69 (WARNING), offer escalation path
 - Provide full context: diff, findings, recommendations
 
 **What this does NOT mean:**
+
 - Do not make implementation decisions (that's optimizer's role)
 - Do not block changes unilaterally (flag and escalate)
 
 **Enforcement point:** Auto-escalation trigger
+
 ```
 IF (drift_score >= 70):
   escalate_to_optimizer(context={diff, findings, recommendations})
@@ -116,6 +131,7 @@ END IF
 ```
 
 **Consequence of violation:**
+
 - If drift not escalated: Degraded behavior reaches users silently
 - If escalated prematurely: Workflow blocked on false alarms
 
@@ -124,15 +140,18 @@ END IF
 ### Rule 6: MUST Document All Assumptions and Limitations
 
 **What this means:**
+
 - Report must list every assumption made during validation
 - List all data sources, their age, sample sizes
 - List model limitations (e.g., "projection model covers ±15% uncertainty only")
 
 **What this does NOT mean:**
+
 - Do not make hidden assumptions; only validate with explicit ones
 - Cannot assume regime stability if <100 historical observations
 
 **Enforcement point:** Report completeness check
+
 ```
 REQUIRED_SECTIONS = [
   "Assumptions & Limitations",
@@ -148,6 +167,7 @@ END FOR
 ```
 
 **Consequence of violation:**
+
 - Downstream teams make decisions on hidden assumptions
 - When assumptions break, reports become unreliable
 - Lack of transparency erodes trust
@@ -182,6 +202,12 @@ Every report must pass this checklist before being returned:
 - [ ] Analysis was domain-sensitive (filtered non-analytical changes)
 - [ ] Report format is valid markdown
 
+### Rule 7: Sole Status Ownership
+
+- You MUST NOT PATCH the status of a parent issue. CEO handles all hierarchical transitions.
+- Your `Exit` phase always PATCHes your OWN assigned issue to `in_review`.
+- Always inherit `projectId` from parent when creating child issues (if any).
+
 **If any check fails:** Do NOT return report. Return ERROR with specific failure reason.
 
 ---
@@ -189,6 +215,7 @@ Every report must pass this checklist before being returned:
 ## Examples of Rule Violations
 
 ### Example 1: Analyzing Non-Analytical Change (Rule 1)
+
 ```
 Change: Add new database index on user_id column
 Analysis: "Index improves query performance. No semantic impact."
@@ -196,6 +223,7 @@ Violation: Index is infrastructure, not analytics. Should have SKIPped.
 ```
 
 ### Example 2: Silent Assumption (Rule 6)
+
 ```
 Report: "Regime continuity: PASS (assumed historical data is representative)"
 Violation: Assumption should be explicit: "Assumed historical data representative.
@@ -203,12 +231,14 @@ Violation: Assumption should be explicit: "Assumed historical data representativ
 ```
 
 ### Example 3: Data Modification (Rule 3)
+
 ```
 Analysis Tool: "Updating historical scores to test new formula..."
 Violation: Modifying production data. Must use read-only test dataset instead.
 ```
 
 ### Example 4: Not Escalating Critical Drift (Rule 5)
+
 ```
 Drift score: 78 (CRITICAL)
 Report status: WARNING
@@ -220,6 +250,7 @@ Violation: Drift ≥ 70 must escalate immediately and set status to FAIL.
 ## Dispute Resolution
 
 **If upstream team disputes a report:**
+
 1. Verify all 6 rules were followed
 2. Re-validate using same data with fresh tools
 3. If discrepancy found, escalate to Harness Optimizer for tie-breaking

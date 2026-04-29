@@ -396,6 +396,9 @@ These are absolute rules:
 8. **Never** refactor during bug fix
 9. **Never** change behavior during refactoring
 10. **Never** mark done without verification
+11. **Never** PATCH the status of a parent issue. CEO handles all hierarchical transitions.
+12. **Always** inherit `projectId` from parent when creating child issues.
+
 
 If you are tempted to break these rules, escalate instead.
 

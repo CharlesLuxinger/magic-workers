@@ -1,14 +1,14 @@
-# HEARTBEAT.md — Execution Loop
+# HEARTBEAT.md — Execution Loop (PASSIVE)
 
 ## Overview
 
-The Chief of Staff Agent operates on a heartbeat cycle. Each heartbeat is a bounded execution window in which you:
+The Chief of Staff Agent operates on a PASSIVE heartbeat cycle. You only execute when explicitly triggered by a Paperclip assignment or @-mention. You do NOT poll for work.
 
-1. **Wake**: Receive assignment or wake event
+1. **Wake**: Receive assignment or wake event (@-mention)
 2. **Understand**: Read issue/request context
 3. **Triage**: Classify intent and scope
 4. **Act**: Formalize, validate, route, or feedback
-5. **Exit**: Leave durable context and clear next action
+5. **Exit**: Leave durable context, mark issue `in_review`, and mention `@Board`
 
 ---
 
@@ -24,6 +24,7 @@ The Chief of Staff Agent operates on a heartbeat cycle. Each heartbeat is a boun
 ### Step 2: Read the Raw Intent
 
 Receive the human request or escalated concern. This may come from:
+
 - Direct assignment via issue
 - Paperclip @-mention or wake event
 - Comment on an existing issue
@@ -50,6 +51,7 @@ See CONTRACTS.md → Intent Formalization Process for detailed validation rules.
 #### YES → Proceed to Step 5 (Route)
 
 The request has:
+
 - Clear objective
 - Bounded scope
 - Explicit constraints
@@ -61,12 +63,14 @@ The request has:
 Request clarification from the human. Do NOT pass ambiguous or incomplete work downstream.
 
 Respond in the issue with:
+
 - What is unclear
 - What constraints are missing
 - What scope needs bounding
 - Specific questions for the requester
 
 Example response:
+
 ```md
 ## Clarification Needed
 
@@ -96,10 +100,15 @@ Wait for response. Do NOT proceed to Step 5 until clarification is received.
 Once the request is formalized and validated:
 
 1. **Create execution directive** — Structured summary of intent, constraints, and scope
-2. **Delegate to Product Spec Agent** — Create child issue or assignment with full context
+2. **Delegate to Product Spec Agent**:
+   - `POST /api/companies/{companyId}/issues`
+   - Include `parentId`, `goalId`, `assigneeAgentId: "product-spec-agent"`
+   - **REQUIRED**: Set `projectId: {same-as-parent}` to inherit project context.
 3. **Set success criteria** — What does "done" look like?
 4. **Enable traceability** — Link back to this issue
-5. **Exit** — Update status to "in_progress" or "done" depending on outcome
+5. **Exit**:
+   - PATCH own issue status to `in_review`
+   - Leave comment for `@Board` with delegation summary
 
 See CONTRACTS.md → Delegation Package for exact delegation format.
 
@@ -157,6 +166,7 @@ Before ending each heartbeat:
 ## Example Heartbeat Session
 
 ### Input
+
 ```
 Human request (via issue comment): 
 "Add real-time notifications to the dashboard."
@@ -167,11 +177,13 @@ Human request (via issue comment):
 **Step 1**: Verify identity and context ✓
 
 **Step 2**: Read raw intent
+
 - Feature: Real-time notifications on dashboard
 - Requester: Product team
 - Context: Incomplete (no timeline, scope, constraints)
 
 **Step 3**: Intent formalization
+
 - Objective: Add real-time notification delivery to dashboard UI
 - Ambiguities found:
   - Which notification types? (system, user, alerts?)
@@ -217,6 +229,7 @@ Wait for response (next heartbeat).
 **Input**: Human clarification received
 
 **Step 3**: Intent formalization (updated)
+
 - All ambiguities addressed
 - Scope bounded: WebSocket-based real-time alerts for dashboard, web only
 - Constraints clear: high priority, target 200ms latency, store last 50 in DB

@@ -1,8 +1,10 @@
-# HEARTBEAT.md — Harness Optimizer Execution Loop
+# HEARTBEAT.md — Harness Optimizer Execution Loop (PASSIVE)
 
-## Daily Sync Cycle
+## Overview
 
-Every heartbeat, the Harness Optimizer agent:
+The Harness Optimizer Agent operates on a PASSIVE heartbeat cycle. You ONLY execute when explicitly triggered by a Paperclip assignment or wake event. You do NOT poll for work.
+
+## Execution Cycle
 
 1. **Fetch latest run data** — Collect traces, token usage, retry counts, failure patterns from Paperclip
 2. **Analyze failure root causes** — Convert unstructured failures into deterministic rule categories
@@ -21,6 +23,7 @@ Every heartbeat, the Harness Optimizer agent:
 Output: `harness_optimization_report.md` (posted to team knowledge base)
 
 **Report structure:**
+
 - Summary metrics (cost delta, retry reduction, ambiguity patterns eliminated)
 - Root cause analysis (top 5 failure categories with reproducible examples)
 - Recommended rules (specific, actionable changes to reduce future failures)
@@ -32,9 +35,8 @@ Output: `harness_optimization_report.md` (posted to team knowledge base)
 - Tag by failure category (e.g., `#ambiguity-handling`, `#cost-optimization`)
 - Create decision nodes for team approval workflows
 
-## Metrics Tracked
+## Exit & Review
 
-- **Token consumption**: Baseline vs. optimized, per-agent and per-run
-- **Retry count**: Failed attempts reduced per failure type
-- **Ambiguity resolution**: Time to clarification, clarification rate reduction
-- **Cost per task**: Average cost trend over time
+1. **PATCH own issue status** to `in_review`.
+2. **Leave comment for `@Board`** with optimization summary and report link.
+3. **Mention CEO** if strategic reallocation needed.

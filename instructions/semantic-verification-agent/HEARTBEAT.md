@@ -1,4 +1,6 @@
-# Heartbeat Execution Loop
+# Heartbeat Execution Loop (PASSIVE)
+
+The Semantic Verification Agent operates on a PASSIVE heartbeat cycle. You ONLY execute when explicitly triggered by a Paperclip assignment or wake event. You do NOT poll for work.
 
 Semantic Verification Agent operates on task-driven heartbeats triggered when implementation is ready for semantic review.
 
@@ -33,13 +35,19 @@ Semantic Verification Agent operates on task-driven heartbeats triggered when im
 
 1. Create output document: `semantic_review_report.md`
 2. Comment on issue with findings
-3. If scope violation:
-   - Set issue to `blocked`
-   - Tag Product Spec Agent
-   - Message: "Implementation includes out-of-scope [X]. Spec must expand OR implementation must remove [X]."
-4. If approved:
-   - Transition to next downstream agent (Domain Analytics if applicable)
-   - Update status accordingly
+3. If approved:
+   - Delegation: Create child issue for Domain Analytics Agent:
+     - `POST /api/companies/{companyId}/issues`
+     - Include `parentId`, `goalId`, `assigneeAgentId: "domain-analytics-agent"`
+     - **REQUIRED**: Set `projectId: {same-as-parent}`.
+   - Exit:
+     - PATCH own issue status to `in_review`
+     - Leave comment for `@Board` with semantic review summary.
+4. If scope violation:
+   - Comment on parent issue documenting violation.
+   - Exit:
+     - PATCH own issue status to `in_review` (awaiting spec expansion or impl fix).
+     - Mention `@Board` and relevant agent.
 
 ## Constraints
 
